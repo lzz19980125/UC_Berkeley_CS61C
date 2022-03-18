@@ -39,11 +39,38 @@ void *
 ### pointers Arithmetic
 
 ```c
-*p++;     ==>    p = p+1;
+*p++;     ==>    p = p+1;   ==>  在地址中增加 sizeof(指针p类型)*1
 ```
 
 ```
 (*p)++;   ==>   *p = *p+1;
+```
+
+**多级指针的命名方式**
+
+```c
+int A[] = {50,60,70};
+int *q = A;
+int **p = &q;            /*注意：二级指针必须接一级指针的地址！ */
+/*
+	A[0]的地址是：0x7fff8eb8fbec
+	**p = *q = A[0] = 50;
+	*p = q = 0x7fff8eb8fbec
+	p = &q = 0x7fff8eb8fbd8
+	&p = 0x7fff8eb8fbe0
+*/
+```
+
+**通过函数传参改变一级指针的值**
+
+```c
+void inc_ptr(int **h) {
+	*h = *h + 1; 
+}
+
+int A[3] = {50, 60, 70};
+int* q = A; inc_ptr(&q);
+printf(“*q = %d\n”, *q);
 ```
 
 ### arrays vs pointers
@@ -58,6 +85,10 @@ int main(void){
 	int *p = A;           /*等效于  int *p=&A  */
 }
 ```
+
+### pointer所占空间的大小
+
+pointer取决于你机器的体系结构，如果你的机器是32位的，则sizeof(pointer)=4，如果你的机器是64位的，则sizeof(pointer)=8;
 
 ### Struct
 
@@ -84,9 +115,54 @@ struct point *p;
 /* code to assign to pointer */ 
 printf(“x is %d\n”, (*p).x); 
 printf(“x is %d\n”, p->x);
+
+typedef struct { 
+    int x; 
+    int y;
+} Point;
+
+Point p1; 
+Point p2;
+Point *paddr; 
+paddr = &p2;
+
+/* dot notation */ 
+int h = p1.x; 
+p2.y = p1.y;
+
+/* arrow notation */ 
+int h = paddr->x; 
+int h = (*paddr).x;
+
+/* This works too: copies all of p2 */
+p1 = p2; 
+p1 = *paddr;
 ```
 
 指向结构体的指针使用 arrow operator （->） 提取结构字段。
+
+**struct的内存对齐 **
+
+struct的内存对齐需要遵循以下三个原则：
+
+1. 第一个成员在与结构体变量偏移量为0的地址；
+2. 其他成员变量要对齐到某个数字（对齐数）的整数倍的地址处；
+3. **对齐数=编译器默认的一个对齐数 与 该成员大小的较小值。**
+4. **linux 中默认为4；**
+5. vs 中的默认值为8；
+6. **结构体总大小为最大对齐数的整数倍（每个成员变量除了第一个成员都有一个对齐数）；**
+
+譬如以下例子：
+
+```c
+struct foo { 
+    int a; 
+    char b;
+	struct foo *c; 
+}
+```
+
+则整个struct所占据的内存大小为：int（4）+char（1）+对齐（3）+指针（如果是32位机器，4） = 12*8 byte
 
 ### 利用`typedef`简化代码
 
@@ -106,4 +182,26 @@ typedef struct Node {
 } NodeStruct;
 ```
 
-   
+**Arguments in main() **
+
+```c
+int main(int argc, char *argv[])
+```
+
+* argc 表示命令行中包含的字符串参数的个数；
+* argv 作为一个指向字符串数组的指针数组；
+
+举例说明：
+
+```c
+foo hello 87 "bar baz"
+```
+
+```c
+argc = 4 /* number arguments */
+```
+
+```c
+argv[0] = "foo", argv[1] = "hello", argv[2] = "87", argv[3] = "bar baz"
+```
+
